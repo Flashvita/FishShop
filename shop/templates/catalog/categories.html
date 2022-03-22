@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% block content %}
+<h3>Категории:</h3>
+{% for category in categories %}
+
+    <a href="{% url 'category_detail' category.pk %}">{{ category.title }}</a>
+
+{% endfor %}
+{% endblock content %}

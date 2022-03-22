@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+{% block content %}
+  {% thumbnail product.image "225x175" as im %}
+                            <a href="{{ product.image.url }}">
+                                <img src="{{ im.url }}" class="image-detail">
+                            </a>
+  {% endthumbnail %}
+                        <h5>Цена: {{ product.price }} кг.</h5>
+                        <h6> {{ product.description }}</h6>
+
+                        <form action="{% url 'add_to_cart' product.pk %}" method="post">
+                        {{ form|crispy }}
+                        {% csrf_token %}
+                        <input type="submit" value="Добавить в корзину">
+                        </form>
+{% endblock content %}

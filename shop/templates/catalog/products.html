@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% block content %}
+<h3>Продукты:</h3>
+{% for product in products %}
+
+
+    {% thumbnail product.image "225x175" as im %}
+                            <a href="{{ product.image.url }}">
+                                <img src="{{ im.url }}" class="image-detail">
+                            </a>
+    {% endthumbnail %}
+                            <br>
+    <a href="{% url 'product_detail' product.pk %}">{{ product.title }}</a>
+
+
+
+{% endfor %}
+{% endblock content %}

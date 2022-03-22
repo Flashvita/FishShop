@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% block content %}
+{% for cat in under_categories %}
+
+<a href="{% url 'products' cat.pk %}">{{ cat.title }}</a>
+{% endfor %}
+{% endblock content %}
