@@ -80,9 +80,10 @@ class Customer(models.Model):
     phone = models.CharField(max_length=11, verbose_name='номер телефона')
     address = models.TextField(null=True, blank=True, verbose_name='адресс')
     favourite = models.ManyToManyField(Product, verbose_name='Избранное')
+    id = models.AutoField(primary_key=True)
 
     def __str__(self):
-        return f"{self.user.name}"
+        return f"{self.user.username}"
 
     class Meta:
         verbose_name = 'Покупатель'
@@ -97,16 +98,43 @@ class Order(models.Model):
         (BUYING_TYPE_SELF, 'Самовывоз'),
         (BUYING_TYPE_DELIVERY, 'Доставка')
     )
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='Покупатель')
     first_name = models.CharField(max_length=100, verbose_name='Имя')
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
     phone = models.CharField(max_length=11, verbose_name='телефон ')
     buying_type_choices = models.CharField(max_length=100, verbose_name='Тип заказа', choices=BUYING_TYPE_CHOICES)
     address = models.CharField(max_length=200, verbose_name='Адресс', null=True, blank=True)
+    payment = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.id
+
+    def all_price(self):
+        return sum(item.total() for item in self.items.all())
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
 
 
+class OrderProduct(models.Model):
+    order = models.ForeignKey(Order,
+                              related_name='items',
+                              on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='order_product')
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    weight = models.PositiveIntegerField(default=100)
 
+    def __str__(self):
+        return self.id
 
+    def total(self):
+        return self.price * self.weight
+
+    class Meta:
+        verbose_name = 'Продукт заказ'
+        verbose_name_plural = 'Продукты заказ'
 
 
 

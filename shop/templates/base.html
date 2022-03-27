@@ -45,8 +45,18 @@
               </ul>
             </li>
           </ul>
-           <a class="btn btn-primary bi bi-cart2" href="{% url 'cart_detail' %}" role="button">Корзина</a>
-          <form class="d-flex">
+          {% with total_items=cart|length %}
+            {% if cart|length > 0 %}
+
+               <a class="btn btn-danger bi bi-cart-plus" href="{% url 'cart_detail' %}" role="button">Корзина</a>
+              <form class="d-flex">
+
+            {% else %}
+               <a class="btn btn-primary bi bi-cart2" href="{% url 'cart_detail' %}" role="button">Корзина</a>
+              <form class="d-flex">
+            {% endif %}
+          {% endwith %}
+
             <input class="form-control me-2" type="search" placeholder="Поик по каталогу" aria-label="Search">
             <button class="btn btn-outline-success" type="submit">Искать</button>
           </form>

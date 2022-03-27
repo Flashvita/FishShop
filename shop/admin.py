@@ -7,6 +7,11 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['title']
     prepopulated_fields = {'slug': ('title',)}
 
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ['__str__', 'id']
+
+
 
 @admin.register(UnderCategory)
 class UnderCategoryAdmin(admin.ModelAdmin):
@@ -21,6 +26,3 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['category', 'under_category', 'price']
 
 
-@admin.register(Customer)
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['user']

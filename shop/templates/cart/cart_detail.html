@@ -30,8 +30,8 @@
 </td>
 <td>{{ product.title }}</td>
 <td><form action="{% url 'add_to_cart' product.pk %}" method="post">
-{{ item.update_quantity_form.quantity }}
-{{ item.update_quantity_form.update }}
+{{ item.update_weight_form.weight }}
+{{ item.update_weight_form.update }}
 <input type="submit" value="Update">
 {% csrf_token %}
 </form></td>
@@ -49,6 +49,7 @@
 </tbody>
 </table>
 <p class="text-right">
+    <h4><a href="{% url 'order-create' %}">Оформить заказ</a> </h4>
 
 
 {% endblock %}

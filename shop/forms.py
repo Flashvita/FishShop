@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, Customer
+from .models import User, Customer, Order, OrderProduct
 
 
 class RegistrationForm(forms.ModelForm):
@@ -67,9 +67,14 @@ class LoginForm(forms.ModelForm):
         return self.cleaned_data
 
 
-PRODUCT_QUANTITY_CHOICES = [(i, str(i)) for i in range(1, 10)]
-
-
 class ProductAddToCartForm(forms.Form):
-    quantity = forms.TypedChoiceField(choices=PRODUCT_QUANTITY_CHOICES, coerce=int, label='Количество')
+    weight = forms.CharField(widget=forms.NumberInput, label='Вес')
     update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+
+
+class OrderCreateForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['first_name', 'last_name', 'email', 'buying_type_choices', 'phone', 'address']
+
+

@@ -1,15 +1,16 @@
 from django.shortcuts import render
 from django import views
-from .models import Product, Category, UnderCategory, Customer
+from .models import Product, Category, UnderCategory, Customer, OrderProduct, Order
 from django.views.generic import ListView
 from django.shortcuts import get_object_or_404
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login, authenticate
-from .forms import RegistrationForm, LoginForm, ProductAddToCartForm
+from .forms import RegistrationForm, LoginForm, ProductAddToCartForm, OrderCreateForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth.views import LogoutView
 from django.contrib import messages
 from .cart import Cart
+from .tasks import new_order
 
 
 class BaseView(views.View):
@@ -56,8 +57,8 @@ class ProductsView(views.View):
 
 
 class ProductDetail(views.View):
-    def get(self, request, slug, *args, **kwargs):
-        product = get_object_or_404(Product, slug=slug)
+    def get(self, request, pk, *args, **kwargs):
+        product = get_object_or_404(Product, pk=pk)
         form = ProductAddToCartForm()
         context = {
             'product': product,
@@ -89,7 +90,6 @@ class RegistrationCustomerView(views.View):
             Customer.objects.create(
                 user=new_user,
                 phone=form.cleaned_data['phone'],
-
             )
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             login(request, user)
@@ -132,15 +132,15 @@ class LogoutUserView(LogoutView):
 
 
 class ProductAddToCartView(views.View):
-    def post(self, request, product_id, *args, **kwargs):
+    def post(self, request, pk, *args, **kwargs):
         cart = Cart(request)
-        product = get_object_or_404(Product, id=product_id)
+        product = get_object_or_404(Product, id=pk)
         form = ProductAddToCartForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
             cart.add(product=product,
-                     quantity=cd['quantity'],
-                     update_quantity=cd['update'])
+                     weight=cd['weight'],
+                     update_weight=cd['update'])
         return HttpResponseRedirect('/cart/cart_detail/')
 
 
@@ -148,8 +148,8 @@ class CartDetailView(views.View):
     def get(self, request, *args, **kwargs):
         cart = Cart(request)
         for item in cart:
-            item['update_quantity_form'] = ProductAddToCartForm(
-                initial={'quantity': item['quantity'],
+            item['update_weight_form'] = ProductAddToCartForm(
+                initial={'weight': item['weight'],
                          'update': True})
         context = {
             'cart': cart,
@@ -158,13 +158,42 @@ class CartDetailView(views.View):
 
 
 class ProductRemoveFromCartView(views.View):
-    def post(self, pk, request, *args, **kwargs):
+    def post(self, product_id, request, *args, **kwargs):
+        cart = Cart(request)
+        product = get_object_or_404(Product, id=product_id)
+        cart.remove(product)
+
+    def get(self, request, pk, *args, **kwargs):
         cart = Cart(request)
         product = get_object_or_404(Product, pk=pk)
         cart.remove(product)
-
-    def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+class OrderCreateView(views.View, Order):
+    def get(self, request, *args, **kwargs):
+        cart = Cart(request)
+        form = OrderCreateForm()
+        context = {
+            'cart': cart,
+            'form': form,
+        }
+        return render(request, 'orders/order-create.html', context)
+
+    def post(self, request, *args, **kwargs):
+        cart = Cart(request)
+        form = OrderCreateForm(request.POST)
+        if form.is_valid():
+            order = form.save()
+            for item in cart:
+                OrderProduct.objects.create(
+                    order=order,
+                    product=item['product'],
+                    price=item['price'],
+                    weight=item['weight'],
+                )
+            cart.clear()
+            new_order.delay(order.id)
+            return render(request, 'orders/order-complete.html', {'order': order})
 
 
